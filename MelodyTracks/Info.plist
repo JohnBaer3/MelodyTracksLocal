@@ -70,5 +70,7 @@
 	<string>Used to display location on map and track run</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>NSLocationWhenInUseUsageDescription</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>The App requires your location data </string>
 </dict>
 </plist>

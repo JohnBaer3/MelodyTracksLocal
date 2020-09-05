@@ -11,6 +11,9 @@ import MediaPlayer
 import CoreData
 import CoreServices
 
+import AVKit
+
+
 //stuff from AVAudioPlayer port
 //var paused = true  //moved to Custom Curtain View
 //var SongsArr: [Song] = [] //moved to Custom Curtain View
@@ -23,6 +26,8 @@ import CoreServices
 
 //Passed into SongLibraryScreen and CustomCurtainController
 var SongsArr : [Song] = []
+
+let audioPlayer = AVAudioEngine()
 
 
 var chosenMPH = 0
@@ -84,17 +89,14 @@ class SelectionViewController: UIViewController, MPMediaPickerControllerDelegate
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        
         let songData: [SongsDataModel]?
         
         
-        do{
-            self.songsData = try context.fetch(SongsDataModel.fetchRequest())
-            for song in songsData!{
-                print("songBPM ", song.songsBPM)
-            }
-        }catch{
-            print(error)
-        }
+        
+        let songTestURL = "file:///private/var/mobile/Containers/Data/Application/83A5DC9C-7E61-4E7D-9317-4DF3A2449B5C/tmp/com.CSE115A.MelodyTracks-Inbox/Mac%20Miller%20-%20My%20Favorite%20Part%20(feat.%20Ariana%20Grande).mp3"
+        
+        //removeSuffix
         
         
         saveButton.setInitialDetails()
@@ -111,6 +113,36 @@ class SelectionViewController: UIViewController, MPMediaPickerControllerDelegate
         runButton.layer.cornerRadius = 10
         
         chosenMPH = Int(MPH.text!)!
+    }
+    
+    
+    func play(_ url: URL) throws {
+        print("runs special play")
+        // 1: load the file
+        let file = try AVAudioFile(forReading: url)
+
+
+        // 3: connect the components to our playback engine
+        engine.attach(audioPlayer ?? AVAudioPlayerNode())
+        engine.attach(pitchControl)
+        engine.attach(speedControl)
+        
+        // 4: arrange the parts so that output from one is input to another
+        engine.connect(audioPlayer ?? AVAudioPlayerNode(), to: speedControl, format: nil)
+        engine.connect(speedControl, to: pitchControl, format: nil)
+        engine.connect(pitchControl, to: engine.mainMixerNode, format: nil)
+
+        // 5: prepare the player to play its file from the beginning
+        audioPlayer.scheduleFile(file, at: nil)
+        
+        // 6: start the engine and player
+        try engine.start()
+        do {
+           try AVAudioSession.sharedInstance().setCategory(.playback)
+        } catch(let error) {
+            print(error.localizedDescription)
+        }
+        audioPlayer.play()
     }
     
     
@@ -197,10 +229,6 @@ class SelectionViewController: UIViewController, MPMediaPickerControllerDelegate
         
          }
     }
-    
-    
-    
-    
     
     
     
@@ -360,7 +388,7 @@ class SelectionViewController: UIViewController, MPMediaPickerControllerDelegate
         for letter in reversed{
             if adding{
                 output += String(letter)
-            }else if letter == "."{
+            }else if String(letter) == "."{
                 adding = true
             }else{
                 break
@@ -394,6 +422,18 @@ extension SelectionViewController: UIDocumentPickerDelegate{
         
         do{
             try context.save()
+            
+            self.songsData = try context.fetch(SongsDataModel.fetchRequest())
+            for song in songsData!{
+                print("songBPM ", song.songsBPM)
+                let newSong = Song(title: song.songsURL!, BPM: Float(song.songsBPM!)!, played: false)
+                SongsArr.append(newSong)
+                
+                print("title: ", SongsArr[0].title)
+
+                try play(URL(string: SongsArr[0].title)!)
+            }
+
         }catch{
             print(error)
         }

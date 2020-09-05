@@ -266,11 +266,13 @@ class CustomCurtainViewController: UIViewController, MPMediaPickerControllerDele
                 
                 currentSongIndex = 0
                 SongsArr![0].played = true
-                let filePathSong = Bundle.main.path(forResource: removeSuffix(songName: currentSong!.title), ofType: "mp3", inDirectory: "Songs")
-                let songUrl = URL(string: filePathSong!)
-//                let BPMOfSong = BPMAnalyzer.core.getBpmFrom(songUrl!, completion: nil)
+//                let filePathSong = Bundle.main.path(forResource: removeSuffix(songName: currentSong!.title), ofType: "mp3", inDirectory: "Songs")
+//                let songUrl = URL(string: filePathSong!)
+                
+                
                 do {
-                    try play(songUrl!)
+                    try play(URL(string: SongsArr![0].title)!)
+//                    try play(songUrl!)
                 }catch{}
             }else{
                 playPlayer()
